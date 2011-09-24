@@ -2,7 +2,7 @@ include $(GOROOT)/src/Make.inc
 
 all: package
 
-TARG=launchpad.net/ensemble/go/schema
+TARG=launchpad.net/juju/go/schema
 
 GOFILES=\
 	schema.go\
