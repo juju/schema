@@ -9,7 +9,7 @@ import (
 
 	gc "launchpad.net/gocheck"
 
-	"github.com/juju/juju/schema"
+	"github.com/juju/schema"
 )
 
 func Test(t *testing.T) {
