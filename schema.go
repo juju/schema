@@ -506,3 +506,23 @@ func (c mapSetC) Coerce(v interface{}, path []string) (interface{}, error) {
 	}
 	return nil, error_{"supported selector", selector, append(path, ".", c.selector)}
 }
+
+// UUID returns a Checker that accepts a string value only and returns
+// it unprocessed.
+func UUID() Checker {
+	return uuidC{}
+}
+
+type uuidC struct{}
+
+var uuidregex = regexp.MustCompile(`[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}`)
+
+func (c uuidC) Coerce(v interface{}, path []string) (interface{}, error) {
+	if v != nil && reflect.TypeOf(v).Kind() == reflect.String {
+		uuid := reflect.ValueOf(v).String()
+		if uuidregex.MatchString(uuid) {
+			return uuid, nil
+		}
+	}
+	return nil, error_{"uuid", v, path}
+}
