@@ -424,3 +424,19 @@ func (s *S) TestSchemaMap(c *gc.C) {
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, `type: expected supported selector, got nothing`)
 }
+
+func (s *S) TestUUID(c *gc.C) {
+	sch := schema.UUID()
+
+	out, err := sch.Coerce("6216dfc3-6e82-408f-9f74-8565e63e6158", aPath)
+	c.Assert(err, gc.IsNil)
+	c.Assert(out, gc.Equals, "6216dfc3-6e82-408f-9f74-8565e63e6158")
+
+	out, err = sch.Coerce("uuid", aPath)
+	c.Assert(out, gc.IsNil)
+	c.Assert(err, gc.ErrorMatches, `<path>: expected uuid, got string\(\"uuid\"\)`)
+
+	out, err = sch.Coerce(nil, aPath)
+	c.Assert(out, gc.IsNil)
+	c.Assert(err, gc.ErrorMatches, "<path>: expected uuid, got nothing")
+}
