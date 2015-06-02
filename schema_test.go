@@ -265,6 +265,11 @@ func (s *S) TestMap(c *gc.C) {
 	out, err = sch.Coerce(map[string]bool{"a": true}, nil)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, `a: expected int, got bool\(true\)`)
+
+	// Error should work even when path is nil.
+	out, err = sch.Coerce(nil, nil)
+	c.Assert(out, gc.IsNil)
+	c.Assert(err, gc.ErrorMatches, `expected map, got nothing`)
 }
 
 func (s *S) TestStringMap(c *gc.C) {
@@ -348,6 +353,19 @@ func (s *S) TestFieldMap(c *gc.C) {
 	out, err = sch.Coerce(map[string]interface{}{"a": "A", "d": "D"}, aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.DeepEquals, map[string]interface{}{"a": "A", "c": "C"})
+
+	out, err = sch.Coerce(123, aPath)
+	c.Assert(err, gc.ErrorMatches, `<path>: expected map, got int\(123\)`)
+	c.Assert(out, gc.Equals, nil)
+
+	out, err = sch.Coerce(map[int]string{}, aPath)
+	c.Assert(err, gc.ErrorMatches, `<path>: expected map\[string], got map\[int]string\(map\[int]string{}\)`)
+	c.Assert(out, gc.Equals, nil)
+
+	type strKey string
+	out, err = sch.Coerce(map[strKey]string{"a": "A"}, aPath)
+	c.Assert(err, gc.ErrorMatches, `<path>: expected map\[string], got map\[schema_test\.strKey]string\(map\[schema_test.strKey]string{"a":"A"}\)`)
+	c.Assert(out, gc.Equals, nil)
 }
 
 func (s *S) TestFieldMapDefaultInvalid(c *gc.C) {
