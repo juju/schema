@@ -30,6 +30,9 @@ type error_ struct {
 // pathAsString returns a string consisting of the path elements. If path
 // starts with a ".", the dot is omitted.
 func pathAsString(path []string) string {
+	if len(path) == 0 {
+		return ""
+	}
 	if path[0] == "." {
 		return strings.Join(path[1:], "")
 	} else {
@@ -39,13 +42,16 @@ func pathAsString(path []string) string {
 
 func (e error_) Error() string {
 	path := pathAsString(e.path)
+	if path != "" {
+		path += ": "
+	}
 	if e.want == "" {
-		return fmt.Sprintf("%s: unexpected value %#v", path, e.got)
+		return fmt.Sprintf("%sunexpected value %#v", path, e.got)
 	}
 	if e.got == nil {
-		return fmt.Sprintf("%s: expected %s, got nothing", path, e.want)
+		return fmt.Sprintf("%sexpected %s, got nothing", path, e.want)
 	}
-	return fmt.Sprintf("%s: expected %s, got %T(%#v)", path, e.want, e.got, e.got)
+	return fmt.Sprintf("%sexpected %s, got %T(%#v)", path, e.want, e.got, e.got)
 }
 
 // Any returns a Checker that succeeds with any input value and
@@ -397,30 +403,29 @@ type fieldMapC struct {
 	strict   bool
 }
 
+var stringType = reflect.TypeOf("")
+
 func (c fieldMapC) Coerce(v interface{}, path []string) (interface{}, error) {
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Map {
 		return nil, error_{"map", v, path}
 	}
+	if rv.Type().Key() != stringType {
+		return nil, error_{"map[string]", v, path}
+	}
 
 	if c.strict {
 		for _, k := range rv.MapKeys() {
 			ks := k.String()
-			if _, found := c.fields[ks]; !found {
-				value := interface{}("invalid")
-				valuev := rv.MapIndex(k)
-				if valuev.IsValid() {
-					value = valuev.Interface()
-				}
-				return nil, fmt.Errorf("%v: unknown key %q (value %q)", pathAsString(path), ks, value)
+			if _, ok := c.fields[ks]; !ok {
+				return nil, fmt.Errorf("%v: unknown key %q (value %q)", pathAsString(path), ks, rv.MapIndex(k).Interface())
 			}
 		}
 	}
 
 	vpath := append(path, ".", "?")
 
-	l := rv.Len()
-	out := make(map[string]interface{}, l)
+	out := make(map[string]interface{}, rv.Len())
 	for k, checker := range c.fields {
 		valuev := rv.MapIndex(reflect.ValueOf(k))
 		var value interface{}
