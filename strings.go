@@ -4,6 +4,7 @@
 package schema
 
 import (
+	"fmt"
 	"reflect"
 	"regexp"
 )
@@ -64,4 +65,20 @@ func (c uuidC) Coerce(v interface{}, path []string) (interface{}, error) {
 		}
 	}
 	return nil, error_{"uuid", v, path}
+}
+
+// ForcedString returns a checker that accepts a bool/int/float/string
+// value and returns its string.
+func ForcedString() Checker {
+	return forcedStringC{}
+}
+
+type forcedStringC struct{}
+
+func (c forcedStringC) Coerce(v interface{}, path []string) (interface{}, error) {
+	_, err := OneOf(Bool(), Int(), Float(), String()).Coerce(v, path)
+	if err != nil {
+		return nil, err
+	}
+	return fmt.Sprint(v), nil
 }

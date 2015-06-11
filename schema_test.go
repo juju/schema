@@ -458,3 +458,29 @@ func (s *S) TestUUID(c *gc.C) {
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, "<path>: expected uuid, got nothing")
 }
+
+func (s *S) TestForcedString(c *gc.C) {
+	sch := schema.ForcedString()
+
+	out, err := sch.Coerce(true, aPath)
+	c.Assert(err, gc.IsNil)
+	c.Check(out, gc.Equals, "true")
+
+	out, err = sch.Coerce(10, aPath)
+	c.Assert(err, gc.IsNil)
+	c.Check(out, gc.Equals, "10")
+
+	out, err = sch.Coerce(1.1, aPath)
+	c.Assert(err, gc.IsNil)
+	c.Check(out, gc.Equals, "1.1")
+
+	out, err = sch.Coerce("spam", aPath)
+	c.Assert(err, gc.IsNil)
+	c.Check(out, gc.Equals, "spam")
+
+	_, err = sch.Coerce(map[string]string{}, aPath)
+	c.Check(err, gc.ErrorMatches, ".* unexpected value .*")
+
+	_, err = sch.Coerce([]string{}, aPath)
+	c.Check(err, gc.ErrorMatches, ".* unexpected value .*")
+}
