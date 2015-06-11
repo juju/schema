@@ -3,6 +3,10 @@
 
 package schema
 
+import (
+	"strings"
+)
+
 // The Coerce method of the Checker interface is called recursively when
 // v is being validated.  If err is nil, newv is used as the new value
 // at the recursion point.  If err is non-nil, v is taken as invalid and
@@ -45,4 +49,17 @@ func (c oneOfC) Coerce(v interface{}, path []string) (interface{}, error) {
 		}
 	}
 	return nil, error_{"", v, path}
+}
+
+// pathAsString returns a string consisting of the path elements. If path
+// starts with a ".", the dot is omitted.
+func pathAsString(path []string) string {
+	if len(path) == 0 {
+		return ""
+	}
+	if path[0] == "." {
+		return strings.Join(path[1:], "")
+	} else {
+		return strings.Join(path, "")
+	}
 }
