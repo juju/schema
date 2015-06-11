@@ -5,16 +5,11 @@ package schema_test
 
 import (
 	"math"
-	"testing"
 
 	gc "launchpad.net/gocheck"
 
 	"github.com/juju/schema"
 )
-
-func Test(t *testing.T) {
-	gc.TestingT(t)
-}
 
 type S struct{}
 
