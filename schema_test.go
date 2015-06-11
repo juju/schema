@@ -486,7 +486,7 @@ func (s *S) TestStringified(c *gc.C) {
 
 	sch = schema.Stringified(schema.StringMap(schema.String()))
 
-	out, err = sch.Coerce(map[string]string{}, aPath)
+	out, err = sch.Coerce(map[string]string{"a": "b"}, aPath)
 	c.Assert(err, gc.IsNil)
-	c.Check(out, gc.Equals, "map[]")
+	c.Check(out, gc.Equals, `map[string]string{"a":"b"}`)
 }

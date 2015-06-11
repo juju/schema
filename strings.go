@@ -81,6 +81,9 @@ type stringifiedC struct {
 }
 
 func (c stringifiedC) Coerce(v interface{}, path []string) (interface{}, error) {
+	if newStr, err := String().Coerce(v, path); err == nil {
+		return newStr, nil
+	}
 	_, err := OneOf(append(c.checkers,
 		Bool(),
 		Int(),
@@ -90,5 +93,5 @@ func (c stringifiedC) Coerce(v interface{}, path []string) (interface{}, error) 
 	if err != nil {
 		return nil, err
 	}
-	return fmt.Sprint(v), nil
+	return fmt.Sprintf("%#v", v), nil
 }
