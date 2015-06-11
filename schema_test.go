@@ -459,8 +459,8 @@ func (s *S) TestUUID(c *gc.C) {
 	c.Assert(err, gc.ErrorMatches, "<path>: expected uuid, got nothing")
 }
 
-func (s *S) TestForcedString(c *gc.C) {
-	sch := schema.ForcedString()
+func (s *S) TestStringified(c *gc.C) {
+	sch := schema.Stringified()
 
 	out, err := sch.Coerce(true, aPath)
 	c.Assert(err, gc.IsNil)
@@ -483,4 +483,10 @@ func (s *S) TestForcedString(c *gc.C) {
 
 	_, err = sch.Coerce([]string{}, aPath)
 	c.Check(err, gc.ErrorMatches, ".* unexpected value .*")
+
+	sch = schema.Stringified(schema.StringMap(schema.String()))
+
+	out, err = sch.Coerce(map[string]string{}, aPath)
+	c.Assert(err, gc.IsNil)
+	c.Check(out, gc.Equals, "map[]")
 }

@@ -67,16 +67,26 @@ func (c uuidC) Coerce(v interface{}, path []string) (interface{}, error) {
 	return nil, error_{"uuid", v, path}
 }
 
-// ForcedString returns a checker that accepts a bool/int/float/string
-// value and returns its string.
-func ForcedString() Checker {
-	return forcedStringC{}
+// Stringified returns a checker that accepts a bool/int/float/string
+// value and returns its string. Other value types may be supported by
+// passing in their checkers.
+func Stringified(checkers ...Checker) Checker {
+	return stringifiedC{
+		checkers: checkers,
+	}
 }
 
-type forcedStringC struct{}
+type stringifiedC struct {
+	checkers []Checker
+}
 
-func (c forcedStringC) Coerce(v interface{}, path []string) (interface{}, error) {
-	_, err := OneOf(Bool(), Int(), Float(), String()).Coerce(v, path)
+func (c stringifiedC) Coerce(v interface{}, path []string) (interface{}, error) {
+	_, err := OneOf(append(c.checkers,
+		Bool(),
+		Int(),
+		Float(),
+		String(),
+	)...).Coerce(v, path)
 	if err != nil {
 		return nil, err
 	}
