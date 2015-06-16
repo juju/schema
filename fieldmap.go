@@ -47,12 +47,27 @@ type fieldMapC struct {
 
 var stringType = reflect.TypeOf("")
 
+func hasStrictStringKeys(rv reflect.Value) bool {
+	if rv.Type().Key() == stringType {
+		return true
+	}
+	if rv.Type().Key().Kind() != reflect.Interface {
+		return false
+	}
+	for _, k := range rv.MapKeys() {
+		if k.Elem().Type() != stringType {
+			return false
+		}
+	}
+	return true
+}
+
 func (c fieldMapC) Coerce(v interface{}, path []string) (interface{}, error) {
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Map {
 		return nil, error_{"map", v, path}
 	}
-	if rv.Type().Key() != stringType {
+	if !hasStrictStringKeys(rv) {
 		return nil, error_{"map[string]", v, path}
 	}
 

@@ -322,7 +322,7 @@ func assertFieldMap(c *gc.C, sch schema.Checker) {
 	c.Assert(err, gc.ErrorMatches, `a: expected "A", got bool\(true\)`)
 }
 
-func (s *S) TestFieldMap(c *gc.C) {
+func (s *S) TestFieldMapBasic(c *gc.C) {
 	fields := schema.Fields{
 		"a": schema.Const("A"),
 		"b": schema.Const("B"),
@@ -355,6 +355,20 @@ func (s *S) TestFieldMap(c *gc.C) {
 	out, err = s.sch.Coerce(map[strKey]string{"a": "A"}, aPath)
 	c.Assert(err, gc.ErrorMatches, `<path>: expected map\[string], got map\[schema_test\.strKey]string\(map\[schema_test.strKey]string{"a":"A"}\)`)
 	c.Assert(out, gc.Equals, nil)
+}
+
+func (s *S) TestFieldMapInterfaceKey(c *gc.C) {
+	fields := schema.Fields{
+		"a": schema.Const("A"),
+	}
+	s.sch = schema.FieldMap(fields, nil)
+
+	out, err := s.sch.Coerce(map[interface{}]interface{}{"a": "A"}, aPath)
+	c.Assert(err, gc.IsNil)
+	c.Check(out, gc.DeepEquals, map[string]interface{}{"a": "A"})
+
+	_, err = s.sch.Coerce(map[interface{}]interface{}{1: "A"}, aPath)
+	c.Check(err, gc.ErrorMatches, `<path>: expected map\[string], got map\[interface {}]interface {}\(map\[interface {}]interface {}{1:"A"}\)`)
 }
 
 func (s *S) TestFieldMapDefaultInvalid(c *gc.C) {
