@@ -5,297 +5,286 @@ package schema_test
 
 import (
 	"math"
-	"testing"
 
 	gc "launchpad.net/gocheck"
 
 	"github.com/juju/schema"
 )
 
-func Test(t *testing.T) {
-	gc.TestingT(t)
+type S struct {
+	baseSuite
 }
-
-type S struct{}
 
 var _ = gc.Suite(&S{})
 
-type Dummy struct{}
-
-func (d *Dummy) Coerce(value interface{}, path []string) (coerced interface{}, err error) {
-	return "i-am-dummy", nil
-}
-
-var aPath = []string{"<pa", "th>"}
-
 func (s *S) TestConst(c *gc.C) {
-	sch := schema.Const("foo")
+	s.sch = schema.Const("foo")
 
-	out, err := sch.Coerce("foo", aPath)
+	out, err := s.sch.Coerce("foo", aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.Equals, "foo")
 
-	out, err = sch.Coerce(42, aPath)
+	out, err = s.sch.Coerce(42, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, `<path>: expected "foo", got int\(42\)`)
 
-	out, err = sch.Coerce(nil, aPath)
+	out, err = s.sch.Coerce(nil, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, `<path>: expected "foo", got nothing`)
 }
 
 func (s *S) TestAny(c *gc.C) {
-	sch := schema.Any()
+	s.sch = schema.Any()
 
-	out, err := sch.Coerce("foo", aPath)
+	out, err := s.sch.Coerce("foo", aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.Equals, "foo")
 
-	out, err = sch.Coerce(nil, aPath)
+	out, err = s.sch.Coerce(nil, aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.Equals, nil)
 }
 
 func (s *S) TestOneOf(c *gc.C) {
-	sch := schema.OneOf(schema.Const("foo"), schema.Const(42))
+	s.sch = schema.OneOf(schema.Const("foo"), schema.Const(42))
 
-	out, err := sch.Coerce("foo", aPath)
+	out, err := s.sch.Coerce("foo", aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.Equals, "foo")
 
-	out, err = sch.Coerce(42, aPath)
+	out, err = s.sch.Coerce(42, aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.Equals, 42)
 
-	out, err = sch.Coerce("bar", aPath)
+	out, err = s.sch.Coerce("bar", aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, `<path>: unexpected value "bar"`)
 }
 
 func (s *S) TestBool(c *gc.C) {
-	sch := schema.Bool()
+	s.sch = schema.Bool()
 
 	for _, trueValue := range []interface{}{true, "1", "true", "True", "TRUE"} {
-		out, err := sch.Coerce(trueValue, aPath)
+		out, err := s.sch.Coerce(trueValue, aPath)
 		c.Assert(err, gc.IsNil)
 		c.Assert(out, gc.Equals, true)
 	}
 
 	for _, falseValue := range []interface{}{false, "0", "false", "False", "FALSE"} {
-		out, err := sch.Coerce(falseValue, aPath)
+		out, err := s.sch.Coerce(falseValue, aPath)
 		c.Assert(err, gc.IsNil)
 		c.Assert(out, gc.Equals, false)
 	}
 
-	out, err := sch.Coerce(42, aPath)
+	out, err := s.sch.Coerce(42, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, `<path>: expected bool, got int\(42\)`)
 
-	out, err = sch.Coerce(nil, aPath)
+	out, err = s.sch.Coerce(nil, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, "<path>: expected bool, got nothing")
 }
 
 func (s *S) TestInt(c *gc.C) {
-	sch := schema.Int()
+	s.sch = schema.Int()
 
-	out, err := sch.Coerce(42, aPath)
+	out, err := s.sch.Coerce(42, aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.Equals, int64(42))
 
-	out, err = sch.Coerce(int8(42), aPath)
+	out, err = s.sch.Coerce(int8(42), aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.Equals, int64(42))
 
-	out, err = sch.Coerce("42", aPath)
+	out, err = s.sch.Coerce("42", aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.Equals, int64(42))
 
-	out, err = sch.Coerce(true, aPath)
+	out, err = s.sch.Coerce(true, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, `<path>: expected int, got bool\(true\)`)
 
-	out, err = sch.Coerce(nil, aPath)
+	out, err = s.sch.Coerce(nil, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, "<path>: expected int, got nothing")
 }
 
 func (s *S) TestForceInt(c *gc.C) {
-	sch := schema.ForceInt()
+	s.sch = schema.ForceInt()
 
-	out, err := sch.Coerce(42, aPath)
+	out, err := s.sch.Coerce(42, aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.Equals, int(42))
 
-	out, err = sch.Coerce("42", aPath)
+	out, err = s.sch.Coerce("42", aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.Equals, int(42))
 
-	out, err = sch.Coerce("42.66", aPath)
+	out, err = s.sch.Coerce("42.66", aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.Equals, int(42))
 
-	out, err = sch.Coerce(int8(42), aPath)
+	out, err = s.sch.Coerce(int8(42), aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.Equals, int(42))
 
-	out, err = sch.Coerce(float32(42), aPath)
+	out, err = s.sch.Coerce(float32(42), aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.Equals, int(42))
 
-	out, err = sch.Coerce(float64(42), aPath)
+	out, err = s.sch.Coerce(float64(42), aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.Equals, int(42))
 
-	out, err = sch.Coerce(42.66, aPath)
+	out, err = s.sch.Coerce(42.66, aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.Equals, int(42))
 
 	// If an out of range value is provided, that value is truncated,
 	// generating unexpected results, but no error is raised.
-	out, err = sch.Coerce(float64(math.MaxInt64+1), aPath)
+	out, err = s.sch.Coerce(float64(math.MaxInt64+1), aPath)
 	c.Assert(err, gc.IsNil)
 
-	out, err = sch.Coerce(true, aPath)
+	out, err = s.sch.Coerce(true, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, `<path>: expected number, got bool\(true\)`)
 
-	out, err = sch.Coerce(nil, aPath)
+	out, err = s.sch.Coerce(nil, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, "<path>: expected number, got nothing")
 }
 
 func (s *S) TestFloat(c *gc.C) {
-	sch := schema.Float()
+	s.sch = schema.Float()
 
-	out, err := sch.Coerce(float32(1.0), aPath)
+	out, err := s.sch.Coerce(float32(1.0), aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.Equals, float64(1.0))
 
-	out, err = sch.Coerce(float64(1.0), aPath)
+	out, err = s.sch.Coerce(float64(1.0), aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.Equals, float64(1.0))
 
-	out, err = sch.Coerce(true, aPath)
+	out, err = s.sch.Coerce(true, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, `<path>: expected float, got bool\(true\)`)
 
-	out, err = sch.Coerce(nil, aPath)
+	out, err = s.sch.Coerce(nil, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, "<path>: expected float, got nothing")
 }
 
 func (s *S) TestString(c *gc.C) {
-	sch := schema.String()
+	s.sch = schema.String()
 
-	out, err := sch.Coerce("foo", aPath)
+	out, err := s.sch.Coerce("foo", aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.Equals, "foo")
 
-	out, err = sch.Coerce(true, aPath)
+	out, err = s.sch.Coerce(true, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, `<path>: expected string, got bool\(true\)`)
 
-	out, err = sch.Coerce(nil, aPath)
+	out, err = s.sch.Coerce(nil, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, "<path>: expected string, got nothing")
 }
 
 func (s *S) TestSimpleRegexp(c *gc.C) {
-	sch := schema.SimpleRegexp()
-	out, err := sch.Coerce("[0-9]+", aPath)
+	s.sch = schema.SimpleRegexp()
+	out, err := s.sch.Coerce("[0-9]+", aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.Equals, "[0-9]+")
 
-	out, err = sch.Coerce(1, aPath)
+	out, err = s.sch.Coerce(1, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, `<path>: expected regexp string, got int\(1\)`)
 
-	out, err = sch.Coerce("[", aPath)
+	out, err = s.sch.Coerce("[", aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, `<path>: expected valid regexp, got string\("\["\)`)
 
-	out, err = sch.Coerce(nil, aPath)
+	out, err = s.sch.Coerce(nil, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, `<path>: expected regexp string, got nothing`)
 }
 
 func (s *S) TestList(c *gc.C) {
-	sch := schema.List(schema.Int())
-	out, err := sch.Coerce([]int8{1, 2}, aPath)
+	s.sch = schema.List(schema.Int())
+	out, err := s.sch.Coerce([]int8{1, 2}, aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.DeepEquals, []interface{}{int64(1), int64(2)})
 
-	out, err = sch.Coerce(42, aPath)
+	out, err = s.sch.Coerce(42, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, "<path>: expected list, got int\\(42\\)")
 
-	out, err = sch.Coerce(nil, aPath)
+	out, err = s.sch.Coerce(nil, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, "<path>: expected list, got nothing")
 
-	out, err = sch.Coerce([]interface{}{1, true}, aPath)
+	out, err = s.sch.Coerce([]interface{}{1, true}, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, `<path>\[1\]: expected int, got bool\(true\)`)
 }
 
 func (s *S) TestMap(c *gc.C) {
-	sch := schema.Map(schema.String(), schema.Int())
-	out, err := sch.Coerce(map[string]interface{}{"a": 1, "b": int8(2)}, aPath)
+	s.sch = schema.Map(schema.String(), schema.Int())
+	out, err := s.sch.Coerce(map[string]interface{}{"a": 1, "b": int8(2)}, aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.DeepEquals, map[interface{}]interface{}{"a": int64(1), "b": int64(2)})
 
-	out, err = sch.Coerce(42, aPath)
+	out, err = s.sch.Coerce(42, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, "<path>: expected map, got int\\(42\\)")
 
-	out, err = sch.Coerce(nil, aPath)
+	out, err = s.sch.Coerce(nil, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, "<path>: expected map, got nothing")
 
-	out, err = sch.Coerce(map[int]int{1: 1}, aPath)
+	out, err = s.sch.Coerce(map[int]int{1: 1}, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, "<path>: expected string, got int\\(1\\)")
 
-	out, err = sch.Coerce(map[string]bool{"a": true}, aPath)
+	out, err = s.sch.Coerce(map[string]bool{"a": true}, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, `<path>\.a: expected int, got bool\(true\)`)
 
 	// First path entry shouldn't have dots in an error message.
-	out, err = sch.Coerce(map[string]bool{"a": true}, nil)
+	out, err = s.sch.Coerce(map[string]bool{"a": true}, nil)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, `a: expected int, got bool\(true\)`)
 
 	// Error should work even when path is nil.
-	out, err = sch.Coerce(nil, nil)
+	out, err = s.sch.Coerce(nil, nil)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, `expected map, got nothing`)
 }
 
 func (s *S) TestStringMap(c *gc.C) {
-	sch := schema.StringMap(schema.Int())
-	out, err := sch.Coerce(map[string]interface{}{"a": 1, "b": int8(2)}, aPath)
+	s.sch = schema.StringMap(schema.Int())
+	out, err := s.sch.Coerce(map[string]interface{}{"a": 1, "b": int8(2)}, aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.DeepEquals, map[string]interface{}{"a": int64(1), "b": int64(2)})
 
-	out, err = sch.Coerce(42, aPath)
+	out, err = s.sch.Coerce(42, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, "<path>: expected map, got int\\(42\\)")
 
-	out, err = sch.Coerce(nil, aPath)
+	out, err = s.sch.Coerce(nil, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, "<path>: expected map, got nothing")
 
-	out, err = sch.Coerce(map[int]int{1: 1}, aPath)
+	out, err = s.sch.Coerce(map[int]int{1: 1}, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, "<path>: expected string, got int\\(1\\)")
 
-	out, err = sch.Coerce(map[string]bool{"a": true}, aPath)
+	out, err = s.sch.Coerce(map[string]bool{"a": true}, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, `<path>\.a: expected int, got bool\(true\)`)
 
 	// First path entry shouldn't have dots in an error message.
-	out, err = sch.Coerce(map[string]bool{"a": true}, nil)
+	out, err = s.sch.Coerce(map[string]bool{"a": true}, nil)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, `a: expected int, got bool\(true\)`)
 }
@@ -343,27 +332,27 @@ func (s *S) TestFieldMap(c *gc.C) {
 		"b": schema.Omit,
 		"c": "C",
 	}
-	sch := schema.FieldMap(fields, defaults)
-	assertFieldMap(c, sch)
+	s.sch = schema.FieldMap(fields, defaults)
+	assertFieldMap(c, s.sch)
 
-	out, err := sch.Coerce(map[string]interface{}{"a": "A", "b": "B", "d": "D"}, aPath)
+	out, err := s.sch.Coerce(map[string]interface{}{"a": "A", "b": "B", "d": "D"}, aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.DeepEquals, map[string]interface{}{"a": "A", "b": "B", "c": "C"})
 
-	out, err = sch.Coerce(map[string]interface{}{"a": "A", "d": "D"}, aPath)
+	out, err = s.sch.Coerce(map[string]interface{}{"a": "A", "d": "D"}, aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.DeepEquals, map[string]interface{}{"a": "A", "c": "C"})
 
-	out, err = sch.Coerce(123, aPath)
+	out, err = s.sch.Coerce(123, aPath)
 	c.Assert(err, gc.ErrorMatches, `<path>: expected map, got int\(123\)`)
 	c.Assert(out, gc.Equals, nil)
 
-	out, err = sch.Coerce(map[int]string{}, aPath)
+	out, err = s.sch.Coerce(map[int]string{}, aPath)
 	c.Assert(err, gc.ErrorMatches, `<path>: expected map\[string], got map\[int]string\(map\[int]string{}\)`)
 	c.Assert(out, gc.Equals, nil)
 
 	type strKey string
-	out, err = sch.Coerce(map[strKey]string{"a": "A"}, aPath)
+	out, err = s.sch.Coerce(map[strKey]string{"a": "A"}, aPath)
 	c.Assert(err, gc.ErrorMatches, `<path>: expected map\[string], got map\[schema_test\.strKey]string\(map\[schema_test.strKey]string{"a":"A"}\)`)
 	c.Assert(out, gc.Equals, nil)
 }
@@ -375,8 +364,8 @@ func (s *S) TestFieldMapDefaultInvalid(c *gc.C) {
 	defaults := schema.Defaults{
 		"a": "B",
 	}
-	sch := schema.FieldMap(fields, defaults)
-	_, err := sch.Coerce(map[string]interface{}{}, aPath)
+	s.sch = schema.FieldMap(fields, defaults)
+	_, err := s.sch.Coerce(map[string]interface{}{}, aPath)
 	c.Assert(err, gc.ErrorMatches, `<path>.a: expected "A", got string\("B"\)`)
 }
 
@@ -390,10 +379,10 @@ func (s *S) TestStrictFieldMap(c *gc.C) {
 		"b": schema.Omit,
 		"c": "C",
 	}
-	sch := schema.StrictFieldMap(fields, defaults)
-	assertFieldMap(c, sch)
+	s.sch = schema.StrictFieldMap(fields, defaults)
+	assertFieldMap(c, s.sch)
 
-	out, err := sch.Coerce(map[string]interface{}{"a": "A", "b": "B", "d": "D"}, aPath)
+	out, err := s.sch.Coerce(map[string]interface{}{"a": "A", "b": "B", "d": "D"}, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, `<path>: unknown key "d" \(value "D"\)`)
 }
@@ -407,54 +396,86 @@ func (s *S) TestSchemaMap(c *gc.C) {
 		"type": schema.Const(3),
 		"b":    schema.Const(4),
 	}, nil)
-	sch := schema.FieldMapSet("type", []schema.Checker{fields1, fields2})
+	s.sch = schema.FieldMapSet("type", []schema.Checker{fields1, fields2})
 
-	out, err := sch.Coerce(map[string]int{"type": 1, "a": 2}, aPath)
+	out, err := s.sch.Coerce(map[string]int{"type": 1, "a": 2}, aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.DeepEquals, map[string]interface{}{"type": 1, "a": 2})
 
-	out, err = sch.Coerce(map[string]int{"type": 3, "b": 4}, aPath)
+	out, err = s.sch.Coerce(map[string]int{"type": 3, "b": 4}, aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.DeepEquals, map[string]interface{}{"type": 3, "b": 4})
 
-	out, err = sch.Coerce(map[string]int{}, aPath)
+	out, err = s.sch.Coerce(map[string]int{}, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, `<path>\.type: expected supported selector, got nothing`)
 
-	out, err = sch.Coerce(map[string]int{"type": 2}, aPath)
+	out, err = s.sch.Coerce(map[string]int{"type": 2}, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, `<path>\.type: expected supported selector, got int\(2\)`)
 
-	out, err = sch.Coerce(map[string]int{"type": 3, "b": 5}, aPath)
+	out, err = s.sch.Coerce(map[string]int{"type": 3, "b": 5}, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, `<path>\.b: expected 4, got int\(5\)`)
 
-	out, err = sch.Coerce(42, aPath)
+	out, err = s.sch.Coerce(42, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, `<path>: expected map, got int\(42\)`)
 
-	out, err = sch.Coerce(nil, aPath)
+	out, err = s.sch.Coerce(nil, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, `<path>: expected map, got nothing`)
 
 	// First path entry shouldn't have dots in an error message.
-	out, err = sch.Coerce(map[string]int{"a": 1}, nil)
+	out, err = s.sch.Coerce(map[string]int{"a": 1}, nil)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, `type: expected supported selector, got nothing`)
 }
 
 func (s *S) TestUUID(c *gc.C) {
-	sch := schema.UUID()
+	s.sch = schema.UUID()
 
-	out, err := sch.Coerce("6216dfc3-6e82-408f-9f74-8565e63e6158", aPath)
+	out, err := s.sch.Coerce("6216dfc3-6e82-408f-9f74-8565e63e6158", aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.Equals, "6216dfc3-6e82-408f-9f74-8565e63e6158")
 
-	out, err = sch.Coerce("uuid", aPath)
+	out, err = s.sch.Coerce("uuid", aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, `<path>: expected uuid, got string\(\"uuid\"\)`)
 
-	out, err = sch.Coerce(nil, aPath)
+	out, err = s.sch.Coerce(nil, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, "<path>: expected uuid, got nothing")
+}
+
+func (s *S) TestStringified(c *gc.C) {
+	s.sch = schema.Stringified()
+
+	out, err := s.sch.Coerce(true, aPath)
+	c.Assert(err, gc.IsNil)
+	c.Check(out, gc.Equals, "true")
+
+	out, err = s.sch.Coerce(10, aPath)
+	c.Assert(err, gc.IsNil)
+	c.Check(out, gc.Equals, "10")
+
+	out, err = s.sch.Coerce(1.1, aPath)
+	c.Assert(err, gc.IsNil)
+	c.Check(out, gc.Equals, "1.1")
+
+	out, err = s.sch.Coerce("spam", aPath)
+	c.Assert(err, gc.IsNil)
+	c.Check(out, gc.Equals, "spam")
+
+	_, err = s.sch.Coerce(map[string]string{}, aPath)
+	c.Check(err, gc.ErrorMatches, ".* unexpected value .*")
+
+	_, err = s.sch.Coerce([]string{}, aPath)
+	c.Check(err, gc.ErrorMatches, ".* unexpected value .*")
+
+	s.sch = schema.Stringified(schema.StringMap(schema.String()))
+
+	out, err = s.sch.Coerce(map[string]string{"a": "b"}, aPath)
+	c.Assert(err, gc.IsNil)
+	c.Check(out, gc.Equals, `map[string]string{"a":"b"}`)
 }
