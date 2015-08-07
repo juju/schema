@@ -75,7 +75,7 @@ func (c fieldMapC) Coerce(v interface{}, path []string) (interface{}, error) {
 		for _, k := range rv.MapKeys() {
 			ks := k.String()
 			if _, ok := c.fields[ks]; !ok {
-				return nil, fmt.Errorf("%v: unknown key %q (value %q)", pathAsString(path), ks, rv.MapIndex(k).Interface())
+				return nil, fmt.Errorf("%sunknown key %q (value %#v)", pathAsPrefix(path), ks, rv.MapIndex(k).Interface())
 			}
 		}
 	}

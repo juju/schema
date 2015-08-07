@@ -51,15 +51,21 @@ func (c oneOfC) Coerce(v interface{}, path []string) (interface{}, error) {
 	return nil, error_{"", v, path}
 }
 
-// pathAsString returns a string consisting of the path elements. If path
+// pathAsPrefix returns a string consisting of the path elements
+// suitable for using as the prefix of an error message. If path
 // starts with a ".", the dot is omitted.
-func pathAsString(path []string) string {
+func pathAsPrefix(path []string) string {
 	if len(path) == 0 {
 		return ""
 	}
+	var s string
 	if path[0] == "." {
-		return strings.Join(path[1:], "")
+		s = strings.Join(path[1:], "")
 	} else {
-		return strings.Join(path, "")
+		s = strings.Join(path, "")
 	}
+	if s == "" {
+		return ""
+	}
+	return s + ": "
 }

@@ -14,10 +14,7 @@ type error_ struct {
 }
 
 func (e error_) Error() string {
-	path := pathAsString(e.path)
-	if path != "" {
-		path += ": "
-	}
+	path := pathAsPrefix(e.path)
 	if e.want == "" {
 		return fmt.Sprintf("%sunexpected value %#v", path, e.got)
 	}
