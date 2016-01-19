@@ -76,6 +76,7 @@ func (c uintC) Coerce(v interface{}, path []string) (interface{}, error) {
 	}
 	switch reflect.TypeOf(v).Kind() {
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return reflect.ValueOf(v).Uint(), nil
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		val := reflect.ValueOf(v).Int()
 		if val < 0 {
@@ -93,7 +94,6 @@ func (c uintC) Coerce(v interface{}, path []string) (interface{}, error) {
 	default:
 		return nil, error_{"uint", v, path}
 	}
-	return reflect.ValueOf(v).Uint(), nil
 }
 
 // ForceInt returns a Checker that accepts any integer or float value, and
