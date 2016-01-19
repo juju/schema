@@ -61,6 +61,55 @@ func (c intC) Coerce(v interface{}, path []string) (interface{}, error) {
 	return reflect.ValueOf(v).Int(), nil
 }
 
+// Uint returns a Checker that accepts any integer or unsigned value, and
+// returns the same value consistently typed as an uint64. If the integer
+// value is negative an error is raised.
+func Uint() Checker {
+	return uintC{}
+}
+
+type uintC struct{}
+
+func (c uintC) Coerce(v interface{}, path []string) (interface{}, error) {
+	if v == nil {
+		return nil, error_{"uint", v, path}
+	}
+	switch reflect.TypeOf(v).Kind() {
+	case reflect.Uint:
+	case reflect.Uint8:
+	case reflect.Uint16:
+	case reflect.Uint32:
+	case reflect.Uint64:
+
+	case reflect.Int:
+		fallthrough
+	case reflect.Int8:
+		fallthrough
+	case reflect.Int16:
+		fallthrough
+	case reflect.Int32:
+		fallthrough
+	case reflect.Int64:
+		val := reflect.ValueOf(v).Int()
+		if val < 0 {
+			return nil, error_{"uint", v, path}
+		}
+		// All positive int64 values fit into uint64.
+		return uint64(val), nil
+
+	case reflect.String:
+		val, err := strconv.ParseUint(reflect.ValueOf(v).String(), 0, 64)
+		if err == nil {
+			return val, nil
+		} else {
+			return nil, error_{"uint", v, path}
+		}
+	default:
+		return nil, error_{"uint", v, path}
+	}
+	return reflect.ValueOf(v).Uint(), nil
+}
+
 // ForceInt returns a Checker that accepts any integer or float value, and
 // returns the same value consistently typed as an int. This is required
 // in order to handle the interface{}/float64 type conversion performed by

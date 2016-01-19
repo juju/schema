@@ -5,6 +5,7 @@ package schema_test
 
 import (
 	"math"
+	"time"
 
 	gc "launchpad.net/gocheck"
 
@@ -107,6 +108,38 @@ func (s *S) TestInt(c *gc.C) {
 	out, err = s.sch.Coerce(nil, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, "<path>: expected int, got nothing")
+}
+
+func (s *S) TestUint(c *gc.C) {
+	s.sch = schema.Uint()
+
+	out, err := s.sch.Coerce(42, aPath)
+	c.Assert(err, gc.IsNil)
+	c.Assert(out, gc.Equals, uint64(42))
+
+	out, err = s.sch.Coerce(int8(42), aPath)
+	c.Assert(err, gc.IsNil)
+	c.Assert(out, gc.Equals, uint64(42))
+
+	out, err = s.sch.Coerce(uint8(42), aPath)
+	c.Assert(err, gc.IsNil)
+	c.Assert(out, gc.Equals, uint64(42))
+
+	out, err = s.sch.Coerce("42", aPath)
+	c.Assert(err, gc.IsNil)
+	c.Assert(out, gc.Equals, uint64(42))
+
+	out, err = s.sch.Coerce(-42, aPath)
+	c.Assert(out, gc.IsNil)
+	c.Assert(err.Error(), gc.Equals, "<path>: expected uint, got int(-42)")
+
+	out, err = s.sch.Coerce(true, aPath)
+	c.Assert(out, gc.IsNil)
+	c.Assert(err.Error(), gc.Equals, "<path>: expected uint, got bool(true)")
+
+	out, err = s.sch.Coerce(nil, aPath)
+	c.Assert(out, gc.IsNil)
+	c.Assert(err.Error(), gc.Equals, "<path>: expected uint, got nothing")
 }
 
 func (s *S) TestForceInt(c *gc.C) {
@@ -464,6 +497,33 @@ func (s *S) TestUUID(c *gc.C) {
 	out, err = s.sch.Coerce(nil, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, "<path>: expected uuid, got nothing")
+}
+
+func (s *S) TestTime(c *gc.C) {
+	s.sch = schema.Time()
+
+	var empty time.Time
+	value := time.Date(2016, 10, 9, 12, 34, 56, 0, time.UTC)
+
+	out, err := s.sch.Coerce("", aPath)
+	c.Assert(err, gc.IsNil)
+	c.Assert(out, gc.Equals, empty)
+
+	out, err = s.sch.Coerce(value.Format(time.RFC3339Nano), aPath)
+	c.Assert(err, gc.IsNil)
+	c.Assert(out, gc.Equals, value)
+
+	out, err = s.sch.Coerce("invalid", aPath)
+	c.Assert(out, gc.IsNil)
+	c.Assert(err.Error(), gc.Equals, `parsing time "invalid" as "2006-01-02T15:04:05.999999999Z07:00": cannot parse "invalid" as "2006"`)
+
+	out, err = s.sch.Coerce(42, aPath)
+	c.Assert(out, gc.IsNil)
+	c.Assert(err.Error(), gc.Equals, "<path>: expected string or time.Time, got int(42)")
+
+	out, err = s.sch.Coerce(nil, aPath)
+	c.Assert(out, gc.IsNil)
+	c.Assert(err.Error(), gc.Equals, "<path>: expected string or time.Time, got nothing")
 }
 
 func (s *S) TestStringified(c *gc.C) {
