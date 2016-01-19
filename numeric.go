@@ -75,28 +75,14 @@ func (c uintC) Coerce(v interface{}, path []string) (interface{}, error) {
 		return nil, error_{"uint", v, path}
 	}
 	switch reflect.TypeOf(v).Kind() {
-	case reflect.Uint:
-	case reflect.Uint8:
-	case reflect.Uint16:
-	case reflect.Uint32:
-	case reflect.Uint64:
-
-	case reflect.Int:
-		fallthrough
-	case reflect.Int8:
-		fallthrough
-	case reflect.Int16:
-		fallthrough
-	case reflect.Int32:
-		fallthrough
-	case reflect.Int64:
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		val := reflect.ValueOf(v).Int()
 		if val < 0 {
 			return nil, error_{"uint", v, path}
 		}
 		// All positive int64 values fit into uint64.
 		return uint64(val), nil
-
 	case reflect.String:
 		val, err := strconv.ParseUint(reflect.ValueOf(v).String(), 0, 64)
 		if err == nil {

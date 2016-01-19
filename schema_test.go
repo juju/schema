@@ -129,6 +129,10 @@ func (s *S) TestUint(c *gc.C) {
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.Equals, uint64(42))
 
+	out, err = s.sch.Coerce("-42", aPath)
+	c.Assert(out, gc.IsNil)
+	c.Assert(err.Error(), gc.Equals, `<path>: expected uint, got string("-42")`)
+
 	out, err = s.sch.Coerce(-42, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err.Error(), gc.Equals, "<path>: expected uint, got int(-42)")
