@@ -35,6 +35,7 @@ func (c timeC) Coerce(v interface{}, path []string) (interface{}, error) {
 			return nil, err
 		}
 		return v, nil
+	default:
+		return nil, error_{"string or time.Time", v, path}
 	}
-	return nil, error_{"string or time.Time", v, path}
 }
