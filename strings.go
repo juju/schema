@@ -95,3 +95,39 @@ func (c stringifiedC) Coerce(v interface{}, path []string) (interface{}, error) 
 	}
 	return fmt.Sprintf("%#v", v), nil
 }
+
+// NonEmptyString returns a Checker that only accepts non-empty strings. To
+// tweak the error message, valueLabel can contain a label of the value being
+// checked, e.g. "my special name". If valueLabel is "", "string" will be used
+// as a label instead.
+//
+// Example 1:
+// schema.NonEmptyString("widget").Coerce("", nil) will return an error message
+// like `expected non-empty widget, got string("")`.
+//
+// Example 2:
+// schema.NonEmptyString("").Coerce("", nil) will return an error message like
+// `expected non-empty string, got string("")`.
+func NonEmptyString(valueLabel string) Checker {
+	if valueLabel == "" {
+		valueLabel = "string"
+	}
+	return nonEmptyStringC{valueLabel}
+}
+
+type nonEmptyStringC struct {
+	valueLabel string
+}
+
+func (c nonEmptyStringC) Coerce(v interface{}, path []string) (interface{}, error) {
+	label := fmt.Sprintf("non-empty %s", c.valueLabel)
+	invalidError := error_{label, v, path}
+
+	if v == nil || reflect.TypeOf(v).Kind() != reflect.String {
+		return nil, invalidError
+	}
+	if stringValue := reflect.ValueOf(v).String(); stringValue != "" {
+		return stringValue, nil
+	}
+	return nil, invalidError
+}
