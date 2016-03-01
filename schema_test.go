@@ -35,30 +35,30 @@ func (s *S) TestConst(c *gc.C) {
 	c.Assert(err, gc.ErrorMatches, `<path>: expected "foo", got nothing`)
 }
 
-func (s *S) TestEmptySuccess(c *gc.C) {
+func (s *S) TestNilSuccess(c *gc.C) {
 	assertSuccess := func() {
 		out, err := s.sch.Coerce(nil, aPath)
 		c.Assert(err, gc.IsNil)
 		c.Assert(out, gc.IsNil)
 	}
 
-	s.sch = schema.Empty("")
+	s.sch = schema.Nil("")
 	assertSuccess()
 
-	s.sch = schema.Empty("any label")
+	s.sch = schema.Nil("any label")
 	assertSuccess()
 }
 
-var nonEmptyValues = []interface{}{42, "", "foo", false, 3.14, 0}
+var nonNilValues = []interface{}{42, "", "foo", false, 3.14, 0}
 
-func (s *S) TestEmptyFailuresWithEmptyLabel(c *gc.C) {
-	s.sch = schema.Empty("")
-	s.testCheckerFailsForEachBadValueWithErrorPrefix(c, nonEmptyValues, `<path>: expected empty value`)
+func (s *S) TestNilFailuresWithEmptyLabel(c *gc.C) {
+	s.sch = schema.Nil("")
+	s.testCheckerFailsForEachBadValueWithErrorPrefix(c, nonNilValues, `<path>: expected empty value`)
 }
 
-func (s *S) TestEmptyFailuresWithNonEmptyLabel(c *gc.C) {
-	s.sch = schema.Empty("wallet")
-	s.testCheckerFailsForEachBadValueWithErrorPrefix(c, nonEmptyValues, `<path>: expected empty wallet`)
+func (s *S) TestNilFailuresWithNonEmptyLabel(c *gc.C) {
+	s.sch = schema.Nil("wallet")
+	s.testCheckerFailsForEachBadValueWithErrorPrefix(c, nonNilValues, `<path>: expected empty wallet`)
 }
 
 func (s *S) TestNonEmptyStringSuccess(c *gc.C) {
