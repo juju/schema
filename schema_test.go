@@ -4,6 +4,7 @@
 package schema_test
 
 import (
+	"fmt"
 	"math"
 	"time"
 
@@ -32,6 +33,68 @@ func (s *S) TestConst(c *gc.C) {
 	out, err = s.sch.Coerce(nil, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err, gc.ErrorMatches, `<path>: expected "foo", got nothing`)
+}
+
+func (s *S) TestEmptySuccess(c *gc.C) {
+	assertSuccess := func() {
+		out, err := s.sch.Coerce(nil, aPath)
+		c.Assert(err, gc.IsNil)
+		c.Assert(out, gc.IsNil)
+	}
+
+	s.sch = schema.Empty("")
+	assertSuccess()
+
+	s.sch = schema.Empty("any label")
+	assertSuccess()
+}
+
+var nonEmptyValues = []interface{}{42, "", "foo", false, 3.14, 0}
+
+func (s *S) TestEmptyFailuresWithEmptyLabel(c *gc.C) {
+	s.sch = schema.Empty("")
+	s.testCheckerFailsForEachBadValueWithErrorPrefix(c, nonEmptyValues, `<path>: expected empty value`)
+}
+
+func (s *S) TestEmptyFailuresWithNonEmptyLabel(c *gc.C) {
+	s.sch = schema.Empty("wallet")
+	s.testCheckerFailsForEachBadValueWithErrorPrefix(c, nonEmptyValues, `<path>: expected empty wallet`)
+}
+
+func (s *S) TestNonEmptyStringSuccess(c *gc.C) {
+	assertSuccess := func() {
+		out, err := s.sch.Coerce("non-empty value is ok", aPath)
+		c.Assert(err, gc.IsNil)
+		c.Assert(out, gc.Equals, "non-empty value is ok")
+	}
+
+	s.sch = schema.NonEmptyString("")
+	assertSuccess()
+
+	s.sch = schema.NonEmptyString("any label")
+	assertSuccess()
+}
+
+var badNonEmptyStringValues = []interface{}{42, "", []string{"x"}, false, 3.14, 0}
+
+func (s *S) TestNonEmptyStringWithEmptyLabel(c *gc.C) {
+	s.sch = schema.NonEmptyString("")
+	s.testCheckerFailsForEachBadValueWithErrorPrefix(c, badNonEmptyStringValues, `<path>: expected non-empty string`)
+}
+
+func (s *S) TestNonEmptyStringWithNonEmptyLabel(c *gc.C) {
+	s.sch = schema.NonEmptyString("free beer")
+	s.testCheckerFailsForEachBadValueWithErrorPrefix(c, badNonEmptyStringValues, `<path>: expected non-empty free beer`)
+}
+
+func (s *S) testCheckerFailsForEachBadValueWithErrorPrefix(c *gc.C, badValues []interface{}, errorPrefix string) {
+	for _, badValue := range badValues {
+		out, err := s.sch.Coerce(badValue, aPath)
+		c.Check(out, gc.IsNil)
+		errorSuffix := fmt.Sprintf(", got %T(%#v)", badValue, badValue)
+		c.Check(err, gc.NotNil)
+		c.Check(err.Error(), gc.Equals, errorPrefix+errorSuffix)
+	}
 }
 
 func (s *S) TestAny(c *gc.C) {
