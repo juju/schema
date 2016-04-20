@@ -254,6 +254,67 @@ func (s *S) TestForceInt(c *gc.C) {
 	c.Assert(err, gc.ErrorMatches, "<path>: expected number, got nothing")
 }
 
+func (s *S) TestForceUint(c *gc.C) {
+	s.sch = schema.ForceUint()
+
+	out, err := s.sch.Coerce(42, aPath)
+	c.Assert(err, gc.IsNil)
+	c.Assert(out, gc.Equals, uint64(42))
+
+	out, err = s.sch.Coerce(-42, aPath)
+	c.Assert(out, gc.IsNil)
+	c.Assert(err.Error(), gc.Equals, `<path>: expected uint, got int(-42)`)
+
+	out, err = s.sch.Coerce("-42", aPath)
+	c.Assert(out, gc.IsNil)
+	c.Assert(err.Error(), gc.Equals, `<path>: expected uint, got string("-42")`)
+
+	out, err = s.sch.Coerce("42", aPath)
+	c.Assert(err, gc.IsNil)
+	c.Assert(out, gc.Equals, uint64(42))
+
+	out, err = s.sch.Coerce("42.66", aPath)
+	c.Assert(err, gc.IsNil)
+	c.Assert(out, gc.Equals, uint64(42))
+
+	out, err = s.sch.Coerce(int8(42), aPath)
+	c.Assert(err, gc.IsNil)
+	c.Assert(out, gc.Equals, uint64(42))
+
+	out, err = s.sch.Coerce(uint8(42), aPath)
+	c.Assert(err, gc.IsNil)
+	c.Assert(out, gc.Equals, uint64(42))
+
+	out, err = s.sch.Coerce(float32(42), aPath)
+	c.Assert(err, gc.IsNil)
+	c.Assert(out, gc.Equals, uint64(42))
+
+	out, err = s.sch.Coerce(float64(42), aPath)
+	c.Assert(err, gc.IsNil)
+	c.Assert(out, gc.Equals, uint64(42))
+
+	out, err = s.sch.Coerce(42.66, aPath)
+	c.Assert(err, gc.IsNil)
+	c.Assert(out, gc.Equals, uint64(42))
+
+	out, err = s.sch.Coerce(float64(-42), aPath)
+	c.Assert(out, gc.IsNil)
+	c.Assert(err.Error(), gc.Equals, `<path>: expected uint, got float64(-42)`)
+
+	// If an out of range value is provided, that value is truncated,
+	// generating unexpected results, but no error is raised.
+	out, err = s.sch.Coerce(float64(math.MaxInt64+1), aPath)
+	c.Assert(err, gc.IsNil)
+
+	out, err = s.sch.Coerce(true, aPath)
+	c.Assert(out, gc.IsNil)
+	c.Assert(err, gc.ErrorMatches, `<path>: expected uint, got bool\(true\)`)
+
+	out, err = s.sch.Coerce(nil, aPath)
+	c.Assert(out, gc.IsNil)
+	c.Assert(err, gc.ErrorMatches, "<path>: expected uint, got nothing")
+}
+
 func (s *S) TestFloat(c *gc.C) {
 	s.sch = schema.Float()
 

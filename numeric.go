@@ -128,6 +128,53 @@ func (c forceIntC) Coerce(v interface{}, path []string) (interface{}, error) {
 	return nil, error_{"number", v, path}
 }
 
+// ForceUint returns a Checker that accepts any integer or float value, and
+// returns the same value consistently typed as an uint64. This is required
+// in order to handle the interface{}/float64 type conversion performed by
+// the JSON serializer used as part of the API infrastructure. If the integer
+// value is negative an error is raised.
+func ForceUint() Checker {
+	return forceUintC{}
+}
+
+type forceUintC struct{}
+
+func (c forceUintC) Coerce(v interface{}, path []string) (interface{}, error) {
+	if v != nil {
+		switch vv := reflect.TypeOf(v); vv.Kind() {
+		case reflect.String:
+			vstr := reflect.ValueOf(v).String()
+			intValue, err := strconv.ParseUint(vstr, 0, 64)
+			if err == nil {
+				return intValue, nil
+			}
+			floatValue, err := strconv.ParseFloat(vstr, 64)
+			if err == nil {
+				if floatValue < 0 {
+					return nil, error_{"uint", v, path}
+				}
+				return uint64(floatValue), nil
+			}
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			return reflect.ValueOf(v).Uint(), nil
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			val := reflect.ValueOf(v).Int()
+			if val < 0 {
+				return nil, error_{"uint", v, path}
+			}
+			// All positive int64 values fit into uint64.
+			return uint64(val), nil
+		case reflect.Float32, reflect.Float64:
+			val := reflect.ValueOf(v).Float()
+			if val < 0 {
+				return nil, error_{"uint", v, path}
+			}
+			return uint64(val), nil
+		}
+	}
+	return nil, error_{"uint", v, path}
+}
+
 // Float returns a Checker that accepts any float value, and returns
 // the same value consistently typed as a float64.
 func Float() Checker {
