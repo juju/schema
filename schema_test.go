@@ -297,6 +297,10 @@ func (s *S) TestForceUint(c *gc.C) {
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.Equals, uint64(42))
 
+	out, err = s.sch.Coerce(float64(-42), aPath)
+	c.Assert(out, gc.IsNil)
+	c.Assert(err.Error(), gc.Equals, `<path>: expected uint, got float64(-42)`)
+
 	// If an out of range value is provided, that value is truncated,
 	// generating unexpected results, but no error is raised.
 	out, err = s.sch.Coerce(float64(math.MaxInt64+1), aPath)
