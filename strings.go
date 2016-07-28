@@ -5,6 +5,7 @@ package schema
 
 import (
 	"fmt"
+	"net/url"
 	"reflect"
 	"regexp"
 )
@@ -22,6 +23,26 @@ func (c stringC) Coerce(v interface{}, path []string) (interface{}, error) {
 		return reflect.ValueOf(v).String(), nil
 	}
 	return nil, error_{"string", v, path}
+}
+
+// URL returns a Checker that accepts a string value that must be parseable as a
+// URL, and returns a *net.URL.
+func URL() Checker {
+	return urlC{}
+}
+
+type urlC struct{}
+
+func (c urlC) Coerce(v interface{}, path []string) (interface{}, error) {
+	if v != nil && reflect.TypeOf(v).Kind() == reflect.String {
+		s := reflect.ValueOf(v).String()
+		u, err := url.Parse(s)
+		if err != nil {
+			return nil, error_{"valid url", s, path}
+		}
+		return u, nil
+	}
+	return nil, error_{"url string", v, path}
 }
 
 // SimpleRegexp returns a checker that accepts a string value that is
@@ -89,6 +110,7 @@ func (c stringifiedC) Coerce(v interface{}, path []string) (interface{}, error) 
 		Int(),
 		Float(),
 		String(),
+		URL(),
 	)...).Coerce(v, path)
 	if err != nil {
 		return nil, err
