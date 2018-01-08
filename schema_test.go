@@ -720,57 +720,57 @@ func (s *S) TestStringified(c *gc.C) {
 }
 
 func (s *S) TestTimeDuration(c *gc.C) {
-	s.sch = schema.TimeDuration()
+	sch := schema.TimeDuration()
 
 	var empty time.Duration
 
-	out, err := s.sch.Coerce("", aPath)
+	out, err := sch.Coerce("", aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.Equals, empty)
 
 	value, _ := time.ParseDuration("18h")
 
-	out, err = s.sch.Coerce("18h", aPath)
+	out, err = sch.Coerce("18h", aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.Equals, value)
 
-	out, err = s.sch.Coerce("failure", aPath)
+	out, err = sch.Coerce("failure", aPath)
 	c.Assert(err.Error(), gc.Equals, "time: invalid duration failure")
 
-	out, err = s.sch.Coerce(42, aPath)
+	out, err = sch.Coerce(42, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err.Error(), gc.Equals, "<path>: expected string or time.Duration, got int(42)")
 
-	out, err = s.sch.Coerce(nil, aPath)
+	out, err = sch.Coerce(nil, aPath)
 	c.Assert(out, gc.IsNil)
 	c.Assert(err.Error(), gc.Equals, "<path>: expected string or time.Duration, got nothing")
 }
 
 func (s *S) TestSize(c *gc.C) {
-	s.sch = schema.Size()
+	sch := schema.Size()
 	//Invalid size
-	out, err := s.sch.Coerce("18X", aPath)
+	out, err := sch.Coerce("18X", aPath)
 	c.Assert(err.Error(), gc.Equals, "invalid multiplier suffix \"X\", expected one of MGTPEZY")
 	c.Assert(out, gc.IsNil)
 
 	//Valid Size
-	out, err = s.sch.Coerce("18G", aPath)
+	out, err = sch.Coerce("18G", aPath)
 	c.Assert(err, gc.IsNil)
 	c.Assert(out, gc.Equals, uint64(18432))
 
 	//Empty string
-	out, err = s.sch.Coerce("", aPath)
+	out, err = sch.Coerce("", aPath)
 	c.Assert(err.Error(), gc.Equals, "<path>: expected empty string, got string(\"\")")
 	c.Assert(out, gc.IsNil)
 
 	//Nil
-	out, err = s.sch.Coerce(nil, aPath)
+	out, err = sch.Coerce(nil, aPath)
 	c.Assert(err.Error(), gc.Equals, "<path>: expected string, got nothing")
 	c.Assert(out, gc.IsNil)
 
 	//Invalid type
 	var foo int
-	out, err = s.sch.Coerce(foo, aPath)
+	out, err = sch.Coerce(foo, aPath)
 	c.Assert(err.Error(), gc.Equals, "<path>: expected string, got int(0)")
 	c.Assert(out, gc.IsNil)
 }
