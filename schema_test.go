@@ -755,7 +755,7 @@ func (s *S) TestTimeDuration(c *gc.C) {
 	c.Assert(out, gc.Equals, value)
 
 	out, err = sch.Coerce("failure", aPath)
-	c.Assert(err.Error(), gc.Equals, "<path>: conversion to duration: time: invalid duration failure")
+	c.Assert(err.Error(), gc.Equals, "<path>: conversion to duration: time: invalid duration \"failure\"")
 
 	out, err = sch.Coerce(42, aPath)
 	c.Assert(out, gc.IsNil)
