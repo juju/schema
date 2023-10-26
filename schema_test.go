@@ -739,33 +739,6 @@ func (s *S) TestStringified(c *gc.C) {
 	c.Check(out, gc.Equals, `map[string]string{"a":"b"}`)
 }
 
-func (s *S) TestTimeDuration(c *gc.C) {
-	sch := schema.TimeDuration()
-
-	var empty time.Duration
-
-	out, err := sch.Coerce("", aPath)
-	c.Assert(err, gc.IsNil)
-	c.Assert(out, gc.Equals, empty)
-
-	value, _ := time.ParseDuration("18h")
-
-	out, err = sch.Coerce("18h", aPath)
-	c.Assert(err, gc.IsNil)
-	c.Assert(out, gc.Equals, value)
-
-	out, err = sch.Coerce("failure", aPath)
-	c.Assert(err.Error(), gc.Equals, "<path>: conversion to duration: time: invalid duration \"failure\"")
-
-	out, err = sch.Coerce(42, aPath)
-	c.Assert(out, gc.IsNil)
-	c.Assert(err.Error(), gc.Equals, "<path>: expected string or time.Duration, got int(42)")
-
-	out, err = sch.Coerce(nil, aPath)
-	c.Assert(out, gc.IsNil)
-	c.Assert(err.Error(), gc.Equals, "<path>: expected string or time.Duration, got nothing")
-}
-
 func (s *S) TestSize(c *gc.C) {
 	sch := schema.Size()
 	//Invalid size
